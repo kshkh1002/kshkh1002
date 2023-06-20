@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>가위바위보 대회</title>
+  <style>
+    body {
+      background-color: #f2f2f2;
+      text-align: center;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      color: #333;
+      font-size: 28px;
+      margin-top: 30px;
+    }
+
+    p {
+      color: #666;
+      font-size: 18px;
+    }
+
+    select, button {
+      font-size: 16px;
+      padding: 8px 12px;
+      margin: 10px;
+    }
+
+    #timer {
+      font-size: 36px;
+      margin-top: 20px;
+    }
+
+    #result {
+      font-weight: bold;
+      margin-top: 20px;
+      font-size: 24px;
+    }
+
+    #game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 50px;
+    }
+
+    .choice-button {
+      background-color: #fff;
+      border: 2px solid #333;
+      color: #333;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s;
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 20px;
+    }
+
+    .choice-button:hover {
+      background-color: #333;
+      color: #fff;
+    }
+
+    .choice-button.selected {
+      background-color: #333;
+      color: #fff;
+    }
+
+    .win-count {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>가위바위보 대회</h1>
+  <div id="game-container">
+    <p>난이도를 선택하세요:</p>
+    <select id="difficulty">
+      <option value="beginner">초보</option>
+      <option value="intermediate">중수</option>
+      <option value="advanced">고수</option>
+      <option value="expert">초고수</option>
+      <option value="invincible">무적</option>
+    </select>
+    <button onclick="startGame()">게임 시작</button>
+    <p id="timer"></p>
+    <p>가위바위보 중 하나를 선택하세요:</p>
+    <div>
+      <button class="choice-button" onclick="choose('scissors')">가위</button>
+      <button class="choice-button" onclick="choose('rock')">바위</button>
+      <button class="choice-button" onclick="choose('paper')">보</button>
+    </div>
+    <div id="result"></div>
+    <div id="win-counts">
+      <div class="win-count" id="beginner-count"></div>
+      <div class="win-count" id="intermediate-count"></div>
+      <div class="win-count" id="advanced-count"></div>
+      <div class="win-count" id="expert-count"></div>
+      <div class="win-count" id="invincible-count"></div>
+    </div>
+  </div>
+
+  <script>
+    let difficulty;
+    let timer;
+    let userChoice;
+    let userWinCounts = {
+      beginner: 0,
+      intermediate: 0,
+      advanced: 0,
+      expert: 0,
+      invincible: 0
+    };
+
+    function startGame() {
+      const difficultySelect = document.getElementById("difficulty");
+      difficulty = difficultySelect.value;
+      timer = 3;
+      document.getElementById("timer").innerHTML = timer;
+      document.getElementById("result").innerHTML = "";
+
+      const countDown = setInterval(() => {
+        timer--;
+        document.getElementById("timer").innerHTML = timer;
+        if (timer === 0) {
+          clearInterval(countDown);
+          forfeit();
+        }
+      }, 1000);
+    }
+
+    function choose(choice) {
+      userChoice = choice;
+      document.getElementById("result").innerHTML = "";
+      if (timer === 0) {
+        showResult();
+      }
+    }
+
+    function forfeit() {
+      if (!userChoice) {
+        document.getElementById("result").innerHTML = "사용자가 기권했습니다.";
+        userWinCounts[difficulty] = 0;
+        updateWinCount();
+      }
+    }
+
+    function showResult() {
+      let aiWinProbability;
+      switch (difficulty) {
+        case "beginner":
+          aiWinProbability = 0.1;
+          break;
+        case "intermediate":
+          aiWinProbability = 0.4;
+          break;
+        case "advanced":
+          aiWinProbability = 0.5;
+          break;
+        case "expert":
+          aiWinProbability = 0.8;
+          break;
+        case "invincible":
+          aiWinProbability = 0.9;
+          break;
+      }
+      
+      let result;
+      const random = Math.random();
+      if (difficulty === "invincible" && random < 0.01) {
+        result = "사용자 승리";
+        userWinCounts[difficulty]++;
+        updateWinCount();
+      } else if (random < aiWinProbability) {
+        result = "AI 승리";
+        userWinCounts[difficulty] = 0;
+        updateWinCount();
+      } else {
+        result = "사용자 승리";
+        userWinCounts[difficulty]++;
+        updateWinCount();
+      }
+
+      document.getElementById("result").innerHTML = result;
+
+      if (userWinCounts[difficulty] === 5) {
+        document.getElementById("result").innerHTML = "난이도 '" + difficulty + "'에서 5번 이기셨습니다!";
+        userWinCounts[difficulty] = 0;
+        updateWinCount();
+
+        // 난이도 업데이트
+        const difficultySelect = document.getElementById("difficulty");
+        const currentIndex = difficultySelect.selectedIndex;
+        if (currentIndex < difficultySelect.options.length - 1) {
+          difficultySelect.selectedIndex = currentIndex + 1;
+          difficulty = difficultySelect.value;
+        }
+      }
+    }
+
+    function updateWinCount() {
+      document.getElementById("beginner-count").innerHTML = "초보: " + userWinCounts.beginner + "연승";
+      document.getElementById("intermediate-count").innerHTML = "중수: " + userWinCounts.intermediate + "연승";
+      document.getElementById("advanced-count").innerHTML = "고수: " + userWinCounts.advanced + "연승";
+      document.getElementById("expert-count").innerHTML = "초고수: " + userWinCounts.expert + "연승";
+      document.getElementById("invincible-count").innerHTML = "무적: " + userWinCounts.invincible + "연승";
+    }
+  </script>
+</body>
+</html>
